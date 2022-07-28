@@ -1,3 +1,153 @@
+# :zap: Zapdriver-wrapper
+
+Zapdriver library modified for Mercari Security Team's (error) logging needs!
+
+## Usage
+
+### Initialization
+
+If you use it in a Cloud Function or Cloud Run create a new logger like this:
+
+```
+import (
+	zapdriver "github.com/mercari/zapdriver"
+)
+
+var logger *zapdriver.Logger
+
+func init() {
+	var err error
+	logger, err = zapdriver.NewLoggerWithKServiceName()
+	if err != nil {
+		if logger != nil {
+			logger.Error("Initializing new logger", err)
+		} else {
+			fmt.Printf("Initializing new logger: %v", err)
+			os.Exit(1)
+		}
+}
+```
+
+This will init a Logger with serviceName set to `os.Getenv("K_SERVICE")`. If you are initializing it in an environment where `K_SERVICE` isn't available, or for some reason you want to use a different service name, you can use the following:
+
+```
+import (
+	zapdriver "github.com/mercari/zapdriver"
+)
+
+var logger *zapdriver.Logger
+
+func init() {
+	var err error
+	logger, err = zapdriver.NewLogger("my-service-name")
+	if err != nil {
+		if logger != nil {
+			logger.Error("Initializing new logger", err)
+		} else {
+			fmt.Printf("Initializing new logger: %v", err)
+			os.Exit(1)
+		}
+}
+```
+Make sure to not set the service name to an empty string, as it will cause an error and set the name to `unknown-service`. The logger will still be initialized and can be used.
+
+### Logging
+
+#### Info
+
+You can use a static string, or a format string with the following syntax:
+```
+logger.Info("Info message")
+variable := "message"
+logger.Infof("Info with format string %s", variable)
+```
+#### Error
+
+You can use a static string, or a format string with the following syntax:
+```
+logger.Error("Error message", err)
+variable := "message"
+logger.Errorf(err, "Error with format string %s", variable)
+```
+
+#### Fatal
+
+You can use a static string, or a format string with the following syntax:
+```
+logger.Fatal("Fatal message", err)
+variable := "message"
+logger.Fatalf(err, "Fatal with format string %s", variable)
+```
+
+### Labeling and adding fields
+
+If you want to add additional structured data, you have two choices: labels and fields.
+
+#### Labels
+
+Labels are strings that end up in the `labels` field, that can be seen in Cloud Log / Log Explorer like this:
+
+![The info message in the below example in Log Explorer](log_explorer_info_labels.png)
+
+Please note that the labels and fields are not visible in the Cloud Funcion / Cloud Run "Logs" tab, only the message:
+
+![The info messages in the below example in the Logs tab](cf_logs_info_labels.png)
+
+You can add labels using the following functions:
+```
+logger.WithLabel("key", "value").Info("This is an info with one label")
+logger.WithLabels(map[string]string{
+  "x": "y",
+  "z": "a",
+  "b": "c",
+}).Info("This is an info with multiple labels")
+```
+
+#### Fields
+
+Fields require a string key and a Field type value and end up in the `jsonPayload` field. Make sure not to use keys that are already have a value by default, so don't use `caller`, `context`, `error`, `message`, `serviceContext`, `stacktrace` or `timestamp`, these fields won't get updated.
+A Field can be anything that can be handled by [zap.Any()](https://pkg.go.dev/go.uber.org/zap#Any).
+
+![The error message in the below example in Log Explorer](log_explorer_error_fields.png)
+
+You can add fields using the following functions:
+```
+_, err := strconv.Atoi("-42e")
+logger.WithField("key", "value").Info("Some text")
+logger.WithFields(map[string]zapdriver.Field{
+    "x": 42,
+    "z": "a",
+    "b": err,
+}).Error("Some text", err)
+```
+### Error Reporting
+
+The error logs will look like this in the GCP Error Reporting / Error Groups page:
+
+![example errors on error reporting page](error_reporting.png)
+
+You can see that they are grouped by the message. This grouping is not done by exact match, if only one word differs, they are likely to end up in the same group. You can read more about grouping [here](https://cloud.google.com/error-reporting/docs/grouping-errors). The serviceName is `error-test` in this example.
+
+If you click on them, you get to the "Error Group Details" page.
+
+![error group details](error_group_details.png)
+
+If you click on the Recent samples / View logs, you get to the "Logs Explorer" page where you can see the raw log:
+
+![log explorer](log_explorer_example.png)
+
+The location of the error is in the `jsonPayload.context.reportLocation` field, the error message is in the `jsonPayload.error` field, and the stacktrace is in the `jsonPayload.stacktrace` field.
+
+You can also check the logs in the "Logs" tab of a Cloud Function / Cloud Run, but it only shows the message:
+
+![Logs in the Logs tab](cf_logs.png)
+
+The same logs look like this in the Log Explorer, you can click on the red Error Reporting icon and to see the error in Error Reporting.
+
+![Logs in the log explorer](log_explorer.png)
+
+Below is the original readme:
+
 # :zap: Zapdriver
 
 Blazing fast, [Zap][zap]-based [Stackdriver][stackdriver] logging.
