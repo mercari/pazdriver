@@ -1,4 +1,4 @@
-module github.com/mercari/zapdriver
+module github.com/mercari/pazdriver
 
 go 1.18
 

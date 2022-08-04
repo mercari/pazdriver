@@ -1,4 +1,4 @@
-package zapdriver
+package pazdriver
 
 import (
 	"fmt"
@@ -43,7 +43,7 @@ func NewLogger(serviceName string) (*Logger, error) {
 		return nil, err
 	}
 	if noName {
-		err = fmt.Errorf("zapdriver.NewLogger, servicename not set")
+		err = fmt.Errorf("pazdriver.NewLogger, servicename not set")
 	}
 	return &Logger{logger: zapLogger, labelMap: make(map[string]string), fieldMap: make(map[string]Field)}, err
 }

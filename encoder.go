@@ -1,4 +1,4 @@
-package zapdriver
+package pazdriver
 
 import (
 	"time"

@@ -1,4 +1,4 @@
-# :zap: Zapdriver-wrapper
+# :zap: Pazdriver
 
 Zapdriver library modified for Mercari Security Team's (error) logging needs!
 
@@ -10,14 +10,14 @@ If you use it in a Cloud Function or Cloud Run create a new logger like this:
 
 ```
 import (
-	zapdriver "github.com/mercari/zapdriver"
+	pazdriver "github.com/mercari/pazdriver"
 )
 
-var logger *zapdriver.Logger
+var logger *pazdriver.Logger
 
 func init() {
 	var err error
-	logger, err = zapdriver.NewLoggerWithKServiceName()
+	logger, err = pazdriver.NewLoggerWithKServiceName()
 	if err != nil {
 		if logger != nil {
 			logger.Error("Initializing new logger", err)
@@ -32,14 +32,14 @@ This will init a Logger with serviceName set to `os.Getenv("K_SERVICE")`. If you
 
 ```
 import (
-	zapdriver "github.com/mercari/zapdriver"
+	pazdriver "github.com/mercari/pazdriver"
 )
 
-var logger *zapdriver.Logger
+var logger *pazdriver.Logger
 
 func init() {
 	var err error
-	logger, err = zapdriver.NewLogger("my-service-name")
+	logger, err = pazdriver.NewLogger("my-service-name")
 	if err != nil {
 		if logger != nil {
 			logger.Error("Initializing new logger", err)
@@ -114,7 +114,7 @@ You can add fields using the following functions:
 ```
 _, err := strconv.Atoi("-42e")
 logger.WithField("key", "value").Info("Some text")
-logger.WithFields(map[string]zapdriver.Field{
+logger.WithFields(map[string]pazdriver.Field{
     "x": 42,
     "z": "a",
     "b": err,
@@ -169,8 +169,8 @@ The above components can be used separately, but to start, you can create a new
 Zap logger with all of the above included:
 
 ```golang
-logger, err := zapdriver.NewProduction() // with sampling
-logger, err := zapdriver.NewDevelopment() // with `development` set to `true`
+logger, err := pazdriver.NewProduction() // with sampling
+logger, err := pazdriver.NewDevelopment() // with `development` set to `true`
 ```
 
 The above functions give back a pointer to a `zap.Logger` object, so you can use
@@ -180,16 +180,16 @@ The above functions give back a pointer to a `zap.Logger` object, so you can use
 You can also create a configuration struct, and build your logger from there:
 
 ```golang
-config := zapdriver.NewProductionConfig()
-config := zapdriver.NewDevelopmentConfig()
+config := pazdriver.NewProductionConfig()
+config := pazdriver.NewDevelopmentConfig()
 ```
 
-Or, get the Zapdriver encoder, and build your own configuration struct from
+Or, get the pazdriver encoder, and build your own configuration struct from
 that:
 
 ```golang
-encoder := zapdriver.NewProductionEncoderConfig()
-encoder := zapdriver.NewDevelopmentEncoderConfig()
+encoder := pazdriver.NewProductionEncoderConfig()
+encoder := pazdriver.NewDevelopmentEncoderConfig()
 ```
 
 Read on to learn more about the available Stackdriver-specific log fields, and
@@ -250,7 +250,7 @@ If you have no need for those fields, the quickest way to get started is like
 so:
 
 ```golang
-logger.Info("Request Received.", zapdriver.HTTP(zapdriver.NewHTTP(req, res)))
+logger.Info("Request Received.", pazdriver.HTTP(pazdriver.NewHTTP(req, res)))
 ```
 
 #### Label
@@ -262,7 +262,7 @@ Label(key, value string) zap.Field
 ```
 
 Note that underwater, this sets the key to `labels.<key>`. You need to be using
-the `zapdriver.Core` core for this to be converted to the proper format for
+the `pazdriver.Core` core for this to be converted to the proper format for
 Stackdriver to recognize the labels.
 
 See "Custom Stackdriver Zap core" for more details.
@@ -279,9 +279,9 @@ Like so:
 ```golang
 logger.Info(
   "Did something.",
-  zapdriver.Labels(
-    zapdriver.Label("hello", "world"),
-    zapdriver.Label("hi", "universe"),
+  pazdriver.Labels(
+    pazdriver.Label("hello", "world"),
+    pazdriver.Label("hi", "universe"),
   ),
 )
 ```
@@ -294,8 +294,8 @@ supplied Zap Core.
 You can add a source code location to your log lines to be picked up by
 Stackdriver.
 
-Note that you can set this manually, or use `zapdriver.Core` to automatically
-add this. If you set it manually, _and_ use `zapdriver.Core`, the manual call
+Note that you can set this manually, or use `pazdriver.Core` to automatically
+add this. If you set it manually, _and_ use `pazdriver.Core`, the manual call
 stack will be preserved over the automated one.
 
 ```golang
@@ -311,19 +311,19 @@ pc, file, line, ok := runtime.Caller(0)
 
 // do other stuff...
 
-logger.Error("Something happened!", zapdriver.SourceLocation(pc, file, line, ok))
+logger.Error("Something happened!", pazdriver.SourceLocation(pc, file, line, ok))
 ```
 
-If you use `zapdriver.Core`, the above use-case is the only use-case where you
+If you use `pazdriver.Core`, the above use-case is the only use-case where you
 would want to manually set the source location. In all other situations, you can
 simply omit this field, and it will be added automatically, using the stack
 frame at the location where the log line is triggered.
 
-If you don't use `zapdriver.Core`, and still want to add the source location at
+If you don't use `pazdriver.Core`, and still want to add the source location at
 the frame of the triggered log line, you'd do it like this:
 
 ```golang
-logger.Error("Something happened!", zapdriver.SourceLocation(runtime.Caller(0)))
+logger.Error("Something happened!", pazdriver.SourceLocation(runtime.Caller(0)))
 ```
 
 #### Operation
@@ -343,9 +343,9 @@ to true for the first log in the operation, and `last` to true for the final log
 of the operation.
 
 ```golang
-logger.Info("Started.", zapdriver.Operation("3g4d3g", "my-app", true, false))
-logger.Debug("Progressing.", zapdriver.Operation("3g4d3g", "my-app", false, false))
-logger.Info("Done.", zapdriver.Operation("3g4d3g", "my-app", false, true))
+logger.Info("Started.", pazdriver.Operation("3g4d3g", "my-app", true, false))
+logger.Debug("Progressing.", pazdriver.Operation("3g4d3g", "my-app", false, false))
+logger.Info("Done.", pazdriver.Operation("3g4d3g", "my-app", false, true))
 ```
 
 Instead of defining the "start" and "end" booleans, you can also use these three
@@ -369,7 +369,7 @@ TraceContext(trace string, spanId string, sampled bool, projectName string) []za
 Like so:
 
 ```golang
-logger.Error("Something happened!", zapdriver.TraceContext("105445aa7843bc8bf206b120001000", "0", true, "my-project-name")...)
+logger.Error("Something happened!", pazdriver.TraceContext("105445aa7843bc8bf206b120001000", "0", true, "my-project-name")...)
 ```
 
 ### Pre-configured Stackdriver-optimized encoder
@@ -402,38 +402,38 @@ You can use this encoder if you want to build your Zap logger configuration
 manually:
 
 ```golang
-zapdriver.NewProductionEncoderConfig()
+pazdriver.NewProductionEncoderConfig()
 ```
 
-For parity-sake, there's also `zapdriver.NewDevelopmentEncoderConfig()`, but it
+For parity-sake, there's also `pazdriver.NewDevelopmentEncoderConfig()`, but it
 returns the exact same encoder right now.
 
 ### Custom Stackdriver Zap core
 
 A custom Zap core is included in this package to support some special use-cases.
 
-First of all, if you use `zapdriver.NewProduction()` (or `NewDevelopment`) , you
+First of all, if you use `pazdriver.NewProduction()` (or `NewDevelopment`) , you
 already have this core enabled, so everything _just works_ ™.
 
 There are two use-cases which require this core:
 
-1. If you use `zapdriver.Label("hello", "world")`, it will initially end up in
+1. If you use `pazdriver.Label("hello", "world")`, it will initially end up in
    your log with the key `labels.hello` and value `world`. Now if you have two
    labels, you could also have `labels.hi` with value `universe`. This works as-
    is, but for this to be correctly parsed by Stackdriver as true "labels", you
-   need to use the Zapdriver core, so that both of these fields get rewritten,
+   need to use the pazdriver core, so that both of these fields get rewritten,
    to use the namespace `labels`, and use the keys `hello` and `hi` within that
    namespace. This is done automatically.
 
-2. If you don't want to use `zapdriver.SourceLocation()` on every log call, you
+2. If you don't want to use `pazdriver.SourceLocation()` on every log call, you
    can use this core for the source location to be automatically added to
    each log entry.
 
-When building a logger, you can inject the Zapdriver core as follows:
+When building a logger, you can inject the pazdriver core as follows:
 
 ```golang
 config := &zap.Config{}
-logger, err := config.Build(zapdriver.WrapCore())
+logger, err := config.Build(pazdriver.WrapCore())
 ```
 
 ### Using Error Reporting
@@ -445,21 +445,21 @@ To report errors using StackDriver's Error Reporting tool, a log line needs to f
 The simplest way to do this is by using `NewProductionWithCore`:
 
 ```golang
-logger, err := zapdriver.NewProductionWithCore(zapdriver.WrapCore(
-  zapdriver.ReportAllErrors(true),
-  zapdriver.ServiceName("my service"),
+logger, err := pazdriver.NewProductionWithCore(pazdriver.WrapCore(
+  pazdriver.ReportAllErrors(true),
+  pazdriver.ServiceName("my service"),
 ))
 ```
 
-For parity-sake, there's also `zapdriver.NewDevelopmentWithCore()`
+For parity-sake, there's also `pazdriver.NewDevelopmentWithCore()`
 
 If you are building a custom logger, you can use `WrapCore()` to configure the driver core:
 
 ```golang
 config := &zap.Config{}
-logger, err := config.Build(zapdriver.WrapCore(
-  zapdriver.ReportAllErrors(true),
-  zapdriver.ServiceName("my service"),
+logger, err := config.Build(pazdriver.WrapCore(
+  pazdriver.ReportAllErrors(true),
+  pazdriver.ServiceName("my service"),
 ))
 ```
 
@@ -470,11 +470,11 @@ Configuring this way, every error log entry will be reported to Stackdriver's Er
 If you do not want every error to be reported, you can attach `ErrorReport()` to log call manually:
 
 ```golang
-logger.Error("An error to be reported!", zapdriver.ErrorReport(runtime.Caller(0)))
+logger.Error("An error to be reported!", pazdriver.ErrorReport(runtime.Caller(0)))
 // Or get Caller details
 pc, file, line, ok := runtime.Caller(0)
 // do other stuff... and log elsewhere
-logger.Error("Another error to be reported!", zapdriver.ErrorReport(pc, file, line, ok))
+logger.Error("Another error to be reported!", pazdriver.ErrorReport(pc, file, line, ok))
 ```
 
 Please keep in mind that ErrorReport needs a ServiceContext attached to the log
@@ -486,12 +486,12 @@ the logger:
 ```golang
 logger.Error(
   "An error to be reported!",
-  zapdriver.ErrorReport(runtime.Caller(0)),
-  zapdriver.ServiceContext("my service"),
+  pazdriver.ErrorReport(runtime.Caller(0)),
+  pazdriver.ServiceContext("my service"),
 )
 
 // Or permanently attach it to your logger
-logger = logger.With(zapdriver.ServiceContext("my service"))
+logger = logger.With(pazdriver.ServiceContext("my service"))
 // and then use it
-logger.Error("An error to be reported!", zapdriver.ErrorReport(runtime.Caller(0)))
+logger.Error("An error to be reported!", pazdriver.ErrorReport(runtime.Caller(0)))
 ```

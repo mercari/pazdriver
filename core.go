@@ -1,4 +1,4 @@
-package zapdriver
+package pazdriver
 
 import (
 	"strings"
@@ -17,7 +17,7 @@ type driverConfig struct {
 	ServiceName string
 }
 
-// Core is a zapdriver specific core wrapped around the default zap core. It
+// Core is a pazdriver specific core wrapped around the default zap core. It
 // allows to merge all defined labels
 type core struct {
 	zapcore.Core
@@ -38,11 +38,11 @@ type core struct {
 	// Zap core.
 	tempLabels *labels
 
-	// Configuration for the zapdriver core
+	// Configuration for the pazdriver core
 	config driverConfig
 }
 
-// zapdriver core option to report all logs with level error or above to stackdriver
+// pazdriver core option to report all logs with level error or above to stackdriver
 // using `ErrorReport()` when set to true
 func ReportAllErrors(report bool) func(*core) {
 	return func(c *core) {
@@ -50,7 +50,7 @@ func ReportAllErrors(report bool) func(*core) {
 	}
 }
 
-// zapdriver core option to add `ServiceContext()` to all logs with `name` as
+// pazdriver core option to add `ServiceContext()` to all logs with `name` as
 // service name
 func ServiceName(name string) func(*core) {
 	return func(c *core) {
@@ -59,7 +59,7 @@ func ServiceName(name string) func(*core) {
 }
 
 // WrapCore returns a `zap.Option` that wraps the default core with the
-// zapdriver one.
+// pazdriver one.
 func WrapCore(options ...func(*core)) zap.Option {
 	return zap.WrapCore(func(c zapcore.Core) zapcore.Core {
 		newcore := &core{
